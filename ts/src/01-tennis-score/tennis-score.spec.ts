@@ -17,6 +17,7 @@ describe('Tennis Score', function () {
   });
 
   it('should write 40 - 40', function () {
+    // ARRANGE
     score = score
       .player1Scores()
       .player1Scores()
@@ -24,6 +25,11 @@ describe('Tennis Score', function () {
       .player1Scores()
       .player2Scores()
       .player2Scores();
-    expect(score.getScore()).toBe('40 - 40');
+
+    // ACT
+    const scoreAsStr = score.getScore();
+
+    // ASSERT
+    expect(scoreAsStr).toBe('40 - 40');
   });
 });
