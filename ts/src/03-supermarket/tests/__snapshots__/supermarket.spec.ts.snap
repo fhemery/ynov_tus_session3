@@ -7,13 +7,6 @@ Receipt {
 }
 `;
 
-exports[`Supermarke - Teller should return nothing on empty basket-- 1`] = `
-Receipt {
-  "discounts": Array [],
-  "items": Array [],
-}
-`;
-
 exports[`Supermarke - Teller should return one item and no discount 1`] = `
 Receipt {
   "discounts": Array [],
