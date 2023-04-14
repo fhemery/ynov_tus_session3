@@ -3,7 +3,11 @@
  */
 import { CurrencyIsoCode } from "./currency-iso-code";
 
-export class ConversionRateApi {
+export interface ConversionRateApiInterface {
+  getRate(source: CurrencyIsoCode, target: CurrencyIsoCode): number;
+}
+
+export class ConversionRateApi implements ConversionRateApiInterface {
   getRate(source: CurrencyIsoCode, target: CurrencyIsoCode): number {
     console.log(`Getting rate from ${source} to ${target}`);
     throw new Error(
