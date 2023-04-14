@@ -22,7 +22,7 @@ export class Teller {
         for (let pq of productQuantities) {
             let p = pq.product;
             let quantity = pq.quantity;
-            let unitPrice = this.catalog.getUnitPrice(p);
+            let unitPrice = this.catalog.getUnitPrice(p) +1;
             let price = quantity * unitPrice;
             receipt.addProduct(p, quantity, unitPrice, price);
         }

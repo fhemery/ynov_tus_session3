@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Supermarke - Teller should return nothing on empty basket 1`] = `
+Receipt {
+  "discounts": Array [],
+  "items": Array [],
+}
+`;
+
+exports[`Supermarke - Teller should return nothing on empty basket-- 1`] = `
+Receipt {
+  "discounts": Array [],
+  "items": Array [],
+}
+`;
+
+exports[`Supermarke - Teller should return one item and no discount 1`] = `
+Receipt {
+  "discounts": Array [],
+  "items": Array [
+    ReceiptItem {
+      "price": 5,
+      "product": Product {
+        "name": "Apples",
+        "unit": 0,
+      },
+      "quantity": 2,
+      "totalPrice": 10,
+    },
+  ],
+}
+`;
