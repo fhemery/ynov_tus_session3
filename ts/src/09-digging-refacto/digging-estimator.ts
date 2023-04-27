@@ -16,6 +16,10 @@ export class Team {
   guards = 0;
   guardManagers = 0;
   washers = 0;
+
+  get total(): number {
+    return this.miners + this.washers + this.healers + this.smithies + this.innKeepers + this.guards + this.guardManagers + this.lighters;
+  }
 }
 
 export class TeamComposition {
@@ -25,46 +29,55 @@ export class TeamComposition {
   total = 0;
 }
 
+export class DiggingParameters {
+  readonly maxDigPerRotation: number;
+
+  constructor(readonly length: number, readonly days: number, readonly digPerRotation: number[]) {
+    this.maxDigPerRotation = digPerRotation[digPerRotation.length - 1];
+  }
+}
+
 export class DiggingEstimator {
   private readonly rockInformation: RockInformationInterface;
 
   constructor(rockInformation?: RockInformationInterface) {
-    this.rockInformation = rockInformation || new VinRockInformationService()
+    this.rockInformation = rockInformation || new VinRockInformationService();
   }
 
   tunnel(length: number, days: number, rockType: string): TeamComposition {
     this.validateInputs(length, days);
 
-    const digPerRotation = this.rockInformation.get(rockType);
-    const maxDigPerRotation = digPerRotation[digPerRotation.length - 1];
-    const maxDigPerDay = 2 * maxDigPerRotation;
+    const parameters = new DiggingParameters(length, days, this.rockInformation.get(rockType));
+    const maxDigPerDay = 2 * parameters.maxDigPerRotation;
 
     this.checkIfTunnelCanBeDone(length, days, maxDigPerDay);
 
     const composition = new TeamComposition();
+    const dayTeam = composition.dayTeam;
+    const nightTeam = composition.nightTeam;
 
-    // Miners
+    this.computeMiners(parameters, dayTeam, nightTeam);
+    this.computeDayTeamComposition(dayTeam);
+    this.computeNightTeamComposition(nightTeam);
+
+    composition.total = dayTeam.total + nightTeam.total;
+    return composition;
+  }
+
+  private computeMiners(parameters: DiggingParameters, dayTeam: Team, nightTeam: Team) {
+    const { days, length, digPerRotation, maxDigPerRotation } = parameters;
     for (let i = 0; i < digPerRotation.length - 1; ++i) {
       if (digPerRotation[i] < Math.floor(length / days)) {
-        composition.dayTeam.miners++;
+        dayTeam.miners++;
       }
     }
     if (Math.floor(length / days) > maxDigPerRotation) {
       for (let i = 0; i < digPerRotation.length - 1; ++i) {
         if (digPerRotation[i] + maxDigPerRotation < Math.floor(length / days)) {
-          composition.nightTeam.miners++;
+          nightTeam.miners++;
         }
       }
     }
-    const dayTeam = composition.dayTeam;
-    const nightTeam = composition.nightTeam;
-
-    this.computeDayTeamComposition(dayTeam);
-    this.computeNightTeamComposition(nightTeam);
-
-    composition.total = dayTeam.miners + dayTeam.washers + dayTeam.healers + dayTeam.smithies + dayTeam.innKeepers +
-      nightTeam.miners + nightTeam.washers +  nightTeam.healers  + nightTeam.smithies  + nightTeam.innKeepers + nightTeam.guards + nightTeam.guardManagers + nightTeam.lighters;
-    return composition;
   }
 
   private computeNightTeamComposition(nightTeam: Team) {
