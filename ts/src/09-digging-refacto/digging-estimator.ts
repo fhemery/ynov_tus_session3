@@ -33,16 +33,14 @@ export class DiggingEstimator {
   }
 
   tunnel(length: number, days: number, rockType: string): TeamComposition {
+    this.validateInputs(length, days);
+
     const digPerRotation = this.rockInformation.get(rockType);
     const maxDigPerRotation = digPerRotation[digPerRotation.length - 1];
     const maxDigPerDay = 2 * maxDigPerRotation;
 
-    if (Math.floor(length) !== length || Math.floor(days) !== days || length < 0 || days < 0) {
-      throw new InvalidFormatException();
-    }
-    if (Math.floor(length / days) > maxDigPerDay) {
-      throw new TunnelTooLongForDelayException();
-    }
+    this.checkIfTunnelCanBeDone(length, days, maxDigPerDay);
+
     const composition = new TeamComposition();
 
     // Miners
@@ -58,51 +56,59 @@ export class DiggingEstimator {
         }
       }
     }
-    const dt = composition.dayTeam;
-    const nt = composition.nightTeam;
+    const dayTeam = composition.dayTeam;
+    const nightTeam = composition.nightTeam;
 
-    if (dt.miners > 0) {
-      ++dt.healers;
-      ++dt.smithies;
-      ++dt.smithies;
-    }
+    this.computeDayTeamComposition(dayTeam);
+    this.computeNightTeamComposition(nightTeam);
 
-    if (nt.miners > 0) {
-      ++nt.healers;
-      ++nt.smithies;
-      ++nt.smithies;
-    }
+    composition.total = dayTeam.miners + dayTeam.washers + dayTeam.healers + dayTeam.smithies + dayTeam.innKeepers +
+      nightTeam.miners + nightTeam.washers +  nightTeam.healers  + nightTeam.smithies  + nightTeam.innKeepers + nightTeam.guards + nightTeam.guardManagers + nightTeam.lighters;
+    return composition;
+  }
 
-    if (nt.miners > 0) {
-      nt.lighters = nt.miners + 1;
-    }
-
-    if (dt.miners > 0) {
-      dt.innKeepers = Math.ceil((dt.miners + dt.healers + dt.smithies) / 4) * 4;
-      dt.washers = Math.ceil((dt.miners + dt.healers + dt.smithies + dt.innKeepers) / 10);
-    }
-
-    if (nt.miners > 0) {
-      nt.innKeepers = Math.ceil((nt.miners + nt.healers + nt.smithies + nt.lighters) / 4) * 4;
+  private computeNightTeamComposition(nightTeam: Team) {
+    if (nightTeam.miners > 0) {
+      nightTeam.healers += 1;
+      nightTeam.smithies += 2;
+      nightTeam.lighters = nightTeam.miners + 1;
+      nightTeam.innKeepers = Math.ceil((nightTeam.miners + nightTeam.healers + nightTeam.smithies + nightTeam.lighters) / 4) * 4;
     }
 
     // eslint-disable-next-line no-constant-condition
     while (true) {
-      const oldWashers = nt.washers;
-      const oldGuard = nt.guards;
-      const oldChiefGuard = nt.guardManagers;
+      const oldWashers = nightTeam.washers;
+      const oldGuard = nightTeam.guards;
+      const oldChiefGuard = nightTeam.guardManagers;
 
-      nt.washers = Math.ceil((nt.miners + nt.healers + nt.smithies + nt.innKeepers + nt.lighters + nt.guards + nt.guardManagers) / 10);
-      nt.guards = Math.ceil((nt.healers + nt.miners + nt.smithies + nt.lighters + nt.washers) / 3);
-      nt.guardManagers = Math.ceil((nt.guards) / 3);
+      nightTeam.washers = Math.ceil((nightTeam.miners + nightTeam.healers + nightTeam.smithies + nightTeam.innKeepers + nightTeam.lighters + nightTeam.guards + nightTeam.guardManagers) / 10);
+      nightTeam.guards = Math.ceil((nightTeam.healers + nightTeam.miners + nightTeam.smithies + nightTeam.lighters + nightTeam.washers) / 3);
+      nightTeam.guardManagers = Math.ceil((nightTeam.guards) / 3);
 
-      if (oldWashers === nt.washers && oldGuard === nt.guards && oldChiefGuard === nt.guardManagers) {
+      if (oldWashers === nightTeam.washers && oldGuard === nightTeam.guards && oldChiefGuard === nightTeam.guardManagers) {
         break;
       }
     }
+  }
 
-    composition.total = dt.miners + dt.washers + dt.healers + dt.smithies + dt.innKeepers +
-      nt.miners + nt.washers +  nt.healers  + nt.smithies  + nt.innKeepers + nt.guards + nt.guardManagers + nt.lighters;
-    return composition;
+  private computeDayTeamComposition(dayTeam: Team) {
+    if (dayTeam.miners > 0) {
+      dayTeam.healers += 1;
+      dayTeam.smithies += 2;
+      dayTeam.innKeepers = Math.ceil((dayTeam.miners + dayTeam.healers + dayTeam.smithies) / 4) * 4;
+      dayTeam.washers = Math.ceil((dayTeam.miners + dayTeam.healers + dayTeam.smithies + dayTeam.innKeepers) / 10);
+    }
+  }
+
+  private checkIfTunnelCanBeDone(length: number, days: number, maxDigPerDay: number) {
+    if (Math.floor(length / days) > maxDigPerDay) {
+      throw new TunnelTooLongForDelayException();
+    }
+  }
+
+  private validateInputs(length: number, days: number) {
+    if (Math.floor(length) !== length || Math.floor(days) !== days || length < 0 || days < 0) {
+      throw new InvalidFormatException();
+    }
   }
 }
