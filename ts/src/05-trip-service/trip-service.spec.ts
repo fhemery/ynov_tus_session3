@@ -14,44 +14,34 @@ describe("Trip Service", function() {
 
   it("should throw an exception if currentUser is null (with Jest)", function() {
     UserSession.getLoggedUser = jest.fn().mockReturnValue(null);
-    expect( () => service.getTripsByUser(new User())).toThrowError(new UserNotLoggedInException());
+    expect( () => service.getTripsByUser(new User(), null)).toThrowError(new UserNotLoggedInException());
   });
 
   class TripServiceOverload extends TripService {
-    user: User | null = null;
     trips : Trip[] = [];
-    protected getLoggedUser(): User | null {
-      return this.user;
-    }
 
-    protected getTrips(user: User): Trip[] {
+    protected getTrips(): Trip[] {
       return this.trips;
     }
 
     setTrips(trips: Trip[]) {
       this.trips = trips;
     }
-
-    setLoggedUser(user: User) {
-      this.user = user;
-    }
   }
 
   it("should throw an exception is currentUser is null (with overload)", function() {
     const overload = new TripServiceOverload();
-    expect( () => overload.getTripsByUser(new User())).toThrowError(new UserNotLoggedInException());
+    expect( () => overload.getTripsByUser(new User(), null)).toThrowError(new UserNotLoggedInException());
   });
 
   it("should return no trip when current user is not null and user has no friend", function() {
     const overload = new TripServiceOverload();
-    overload.setLoggedUser(new User());
-    expect(overload.getTripsByUser(new User())).toEqual([]);
+    expect(overload.getTripsByUser(new User(), new User())).toEqual([]);
   });
 
   it("should return no trip when current user is not null and user is not friend with current user", function() {
     const overload = new TripServiceOverload();
     const alice = new User();
-    overload.setLoggedUser(alice);
 
     const bob = new User();
     const carol = new User();
@@ -59,13 +49,12 @@ describe("Trip Service", function() {
     bob.addFriend(carol);
     const toRome = new Trip();
     overload.setTrips([toRome]);
-    expect(overload.getTripsByUser(bob)).toEqual([]);
+    expect(overload.getTripsByUser(bob, alice)).toEqual([]);
   });
 
   it("should return trips when current user is not null and user is friend with current user", function() {
     const overload = new TripServiceOverload();
     const alice = new User();
-    overload.setLoggedUser(alice);
 
     const bob = new User();
     const carol = new User();
@@ -74,7 +63,7 @@ describe("Trip Service", function() {
     bob.addFriend(alice);
     const toRome = new Trip();
     overload.setTrips([toRome]);
-    expect(overload.getTripsByUser(bob)).toEqual([toRome]);
+    expect(overload.getTripsByUser(bob, alice)).toEqual([toRome]);
   });
 
 
