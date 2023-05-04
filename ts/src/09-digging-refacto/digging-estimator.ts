@@ -6,7 +6,6 @@ export class TunnelTooLongForDelayException extends Error {
 
 export class InvalidFormatException extends Error {
 }
-
 export class Team {
   miners = 0;
   healers = 0;
@@ -17,14 +16,33 @@ export class Team {
   guardManagers = 0;
   washers = 0;
 
+  computeHealers() {
+    if (this.miners > 0) {
+      this.healers = 1;
+    }
+  }
+
+  computeInnkeepers() {
+    return Math.ceil((this.miners + this.healers + this.smithies + this.lighters) / 4) * 4
+  }
+
   get total(): number {
     return this.miners + this.washers + this.healers + this.smithies + this.innKeepers + this.guards + this.guardManagers + this.lighters;
   }
 }
+export class DayTeam extends Team {
+  constructor(){
+    super();
+  }
+
+  computeSmithies(){}
+}
+export class NightTeam extends Team {}
+
 
 export class TeamComposition {
-  dayTeam: Team = new Team();
-  nightTeam: Team = new Team();
+  dayTeam: Team = new DayTeam();
+  nightTeam: NightTeam = new NightTeam();
 
   total = 0;
 }
@@ -53,6 +71,8 @@ export class DiggingEstimator {
     this.checkIfTunnelCanBeDone(length, days, maxDigPerDay);
 
     const composition = new TeamComposition();
+    const newDayTeam = new DayTeam();
+    composition.dayTeam = newDayTeam;
     const dayTeam = composition.dayTeam;
     const nightTeam = composition.nightTeam;
 
@@ -85,7 +105,7 @@ export class DiggingEstimator {
       nightTeam.healers += 1;
       nightTeam.smithies += 2;
       nightTeam.lighters = nightTeam.miners + 1;
-      nightTeam.innKeepers = Math.ceil((nightTeam.miners + nightTeam.healers + nightTeam.smithies + nightTeam.lighters) / 4) * 4;
+      nightTeam.innKeepers = nightTeam.computeInnkeepers();
     }
 
     // eslint-disable-next-line no-constant-condition
@@ -108,7 +128,7 @@ export class DiggingEstimator {
     if (dayTeam.miners > 0) {
       dayTeam.healers += 1;
       dayTeam.smithies += 2;
-      dayTeam.innKeepers = Math.ceil((dayTeam.miners + dayTeam.healers + dayTeam.smithies) / 4) * 4;
+      dayTeam.innKeepers = dayTeam.computeInnkeepers();
       dayTeam.washers = Math.ceil((dayTeam.miners + dayTeam.healers + dayTeam.smithies + dayTeam.innKeepers) / 10);
     }
   }
